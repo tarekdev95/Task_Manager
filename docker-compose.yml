@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+    db:
+        image: postgres:17
+        environment:
+            POSTGRES_DB: TaskManagerDB
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: root
+        ports:
+            - '5432:5432'
+
+        volumes:
+            - postgres_data:/var/lib/postgresql/data        
+
+    front-end:
+        build: ./client
+        ports:
+            - '3000:3000'
+
+        volumes:
+            - ./client:/app
+
+
+
+    back-end:
+        build: ./server
+        ports:
+            - '8000:8000'
+
+        volumes:
+            - ./server:/app
+
+
+    grafana:
+        image: grafana/grafana
+
+        ports:
+            - '3001:3000'
+
+        restart: unless-stopped
+        volumes:
+            -grafana_data: /var/lib/grafana
+
+        depends_on:
+            - prometheus
+
+    
+    prometheus:
+
+        image: prom/prometheus
+        ports:
+            - '9090:9090'
+
+        restart: unless-stopped
+        volumes:
+            -prometheus_data: /var/lib/prometheus
+
+        
+volumes:  
+    prometheus_data:
+    postgres_data:
+    grafana_data:
