@@ -15,13 +15,13 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml ./
 RUN poetry install --no-root
 
 COPY . .
 
 EXPOSE 8000
 
-CMD [ "poetry","run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD [ "python", "manage.py", "runserver", "--bind", "0.0.0.0:8000"]
 
 
