@@ -6,7 +6,7 @@
 }
 
 .taskmanager-column {
-  background: #f4f5f7;
+  background: #0649cf;
   border-radius: 8px;
   padding: 1rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -29,7 +29,7 @@
 }
 
 .task-item {
-  background: white;
+  background: rgb(172, 99, 166);
   padding: 0.5rem;
   border-radius: 4px;
   margin-bottom: 0.5rem;
@@ -68,7 +68,7 @@
 }
 
 .add-btn:hover {
-  background-color: #1d4ed8;
+  background-color: #1dd845;
 }
 
 .delete-btn,

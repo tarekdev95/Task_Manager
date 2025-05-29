@@ -1,13 +1,20 @@
-import { Container, Typography } from "@mui/material";
+// src/App.jsx
+import React from "react";
 import Board from "./components/Board";
+import { CssBaseline, Container, Typography } from "@mui/material";
 
-export default function App() {
+function App() {
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom align="center">
-        taskmanager avec React + MUI
-      </Typography>
-      <Board />
-    </Container>
+    <>
+      <CssBaseline />
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          📝TaskManager
+        </Typography>
+        <Board />
+      </Container>
+    </>
   );
 }
+
+export default App;

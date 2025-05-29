@@ -1,42 +1,54 @@
-import { useState } from "react";
-import { Paper, Typography, TextField, Button, Box } from "@mui/material";
-import Task from "./Task";
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  Stack,
+} from "@mui/material";
+import CardItem from "./CardItem";
 
-export default function Column({ title, tasks, onAddTask, onDeleteTask }) {
-  const [newTask, setNewTask] = useState("");
+export default function Column({ column }) {
+  const [cards, setCards] = useState(column.cards);
+  const [newCardText, setNewCardText] = useState("");
 
   const handleAdd = () => {
-    if (newTask.trim()) {
-      onAddTask(newTask);
-      setNewTask("");
-    }
+    if (!newCardText.trim()) return;
+
+    const newCard = {
+      id: `card-${Date.now()}`,
+      text: newCardText,
+    };
+
+    setCards((prev) => [...prev, newCard]);
+    setNewCardText("");
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 2, minHeight: 300, width: 300 }}>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      {tasks.map((task) => (
-        <Task
-          key={task.id}
-          title={task.title}
-          onDelete={() => onDeleteTask(task.id)}
-        />
-      ))}
-      <Box mt={2} display="flex" gap={1}>
-        <TextField
-          size="small"
-          variant="outlined"
-          label="Nouvelle tâche"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          fullWidth
-        />
-        <Button variant="contained" onClick={handleAdd}>
-          Ajouter
-        </Button>
-      </Box>
-    </Paper>
+    <Card sx={{ width: 300, p: 2 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          {column.title}
+        </Typography>
+
+        <Stack spacing={2}>
+          {cards.map((card) => (
+            <CardItem key={card.id} card={card} />
+          ))}
+
+          <TextField
+            label="Nouvelle carte"
+            value={newCardText}
+            onChange={(e) => setNewCardText(e.target.value)}
+            fullWidth
+          />
+
+          <Button onClick={handleAdd} variant="outlined">
+            ➕ Ajouter une carte
+          </Button>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
