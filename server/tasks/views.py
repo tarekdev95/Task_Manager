@@ -1,28 +1,13 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from .models import Project, Task
-from .serializers import ProjectSerializer, TaskSerializer
+from rest_framework import viewsets, permissions
+from .models import Task
+from .serializers import TaskSerializer
 
-class ProjectViewSet(viewsets.ModelViewSet):
-    """
-    CRUD complet pour les projets :
-    - list, retrieve, create, update, partial_update, destroy
-    """
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        # Le champ owner est automatique : l'utilisateur connecté
-        serializer.save(owner=self.request.user)
-
+class IsProjectMember(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user in obj.project.members.all()
 
 class TaskViewSet(viewsets.ModelViewSet):
-    """
-    CRUD complet pour les tâches :
-    - list, retrieve, create, update, partial_update, destroy
-    """
-    queryset = Task.objects.select_related('project', 'assignee').all()
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = (permissions.IsAuthenticated, IsProjectMember)
+    def get_queryset(self):
+        return Task.objects.filter(project__members=self.request.user)

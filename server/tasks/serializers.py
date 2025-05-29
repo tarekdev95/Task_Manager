@@ -1,25 +1,11 @@
 from rest_framework import serializers
-from .models import Project, Task
-
+from .models import Task
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = [
-            'id', 'title', 'description', 'project', 'assignee',
-            'status', 'due_date', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-
-class ProjectSerializer(serializers.ModelSerializer):
-    tasks = TaskSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Project
-        fields = [
-            'id', 'name', 'description', 'owner',
-            'created_at', 'tasks'
-        ]
-        read_only_fields = ['id', 'owner', 'created_at']
-
-
+        fields = '__all__'
+    def validate_assignee(self, user):
+        proj = self.initial_data.get('project')
+        if user and user not in Task.objects.get(pk=self.instance.pk).project.members.all():
+            raise serializers.ValidationError('User not in project')
+        return user

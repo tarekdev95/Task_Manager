@@ -1,50 +1,38 @@
+from multiprocessing import AuthenticationError
 from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
-from .models import User
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
-    confirm_password = serializers.CharField(write_only=True, required=False)
-    
+User = get_user_model()
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'avatar', 'password', 'confirm_password')
-        read_only_fields = ('id',)
-    
-    def validate(self, attrs):
-        pwd = attrs.get('password')
-        pwd2 = attrs.get('confirm_password')
-        
-        # Si on fournit un mot de passe, on exige la confirmation
-        if pwd or pwd2:
-            if not pwd or not pwd2:
-                raise serializers.ValidationError("Les deux champs de mot de passe sont obligatoires.")
-            if pwd != pwd2:
-                raise serializers.ValidationError("Les mots de passe ne correspondent pas.")
-            # applique les validateurs Django (longueur, complexité…)
-            validate_password(pwd, user=self.instance)
-        
-        return attrs
-
-    def create(self, validated_data):
-        pwd = validated_data.pop('password', None)
-        validated_data.pop('confirm_password', None)
-        user = User(**validated_data)
-        if pwd:
-            user.set_password(pwd)
-        else:
-            user.set_unusable_password()
+        fields = ('username','email','password')
+    def create(self, validated):
+        user = User(
+            username=validated['username'],
+            email=validated['email']
+        )
+        user.set_password(validated['password'])
         user.save()
         return user
-    
-    def update(self, instance, validated_data):
-        pwd = validated_data.pop('password', None)
-        validated_data.pop('confirm_password', None)
-        
-        for attr, val in validated_data.items():
-            setattr(instance, attr, val)
-        
-        if pwd:
-            instance.set_password(pwd)
-        instance.save()
-        return instance
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id','username','email','avatar')
+
+class TokenSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    def validate(self, data):
+        user = AuthenticationError(**data)
+        if not user: raise serializers.ValidationError('Invalid credentials')
+        refresh = RefreshToken.for_user(user)
+        return {'access': str(refresh.access_token), 'refresh': str(refresh)}
