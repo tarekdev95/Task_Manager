@@ -1,61 +1,89 @@
----
 name: 'CI Pipeline'
-'on':
+
+on:
   push:
     branches:
-      - 'dev'
+      - dev         # Déclenche la pipeline quand on push sur dev
   pull_request:
     branches:
-      - 'dev'
+      - dev         # Déclenche aussi sur les PR vers dev
+
 jobs:
   backend-tests:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest   # Utilise une VM Ubuntu
+
     services:
       postgres:
-        image: 'postgres:14'
+        image: postgres:14
         env:
-          POSTGRES_DB: 'TaskManagerDB'
-          POSTGRES_USER: 'root'
-          POSTGRES_PASSWORD: 'root'
+          POSTGRES_DB: TaskManagerDB
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: root
         ports:
-          - '5432:5432'
-        options: '--health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5'
+          - 5432:5432
+        options: >            # Options pour vérifier que le conteneur PostgreSQL est prêt
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: 'actions/checkout@v3'
-      - name: 'Set up Python'
-        uses: 'actions/setup-python@v4'
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: 'Install Poetry'
-        run: "curl -sSL https://install.python-poetry.org | python3 -\necho \"$HOME/.local/bin\" >> $GITHUB_PATH\n"
-      - name: 'Install dependencies with Poetry'
-        working-directory: 'server'
-        run: 'poetry install'
-      - name: 'Run Django tests'
-        working-directory: 'server'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies with Poetry
+        working-directory: server
+        run: poetry install
+
+      - name: Run Django tests
+        working-directory: server
         env:
-          DB_HOST: 'localhost'
-          DB_NAME: 'taskmanager'
-          DB_USER: 'postgres'
-          DB_PASSWORD: 'postgres'
-        run: "poetry run python manage.py migrate\npoetry run python manage.py test\n"
+          POSTGRES_DB: TaskManagerDB       # match avec la config du conteneur
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: root
+          DB_HOST: localhost
+        run: |
+          poetry run python manage.py migrate
+          poetry run python manage.py test
+
   frontend-tests:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: 'actions/checkout@v3'
-      - name: 'Set up Node.js'
-        uses: 'actions/setup-node@v3'
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: 'Install dependencies'
-        working-directory: 'client'
-        run: 'npm install'
-      - name: 'Run lint and tests'
-        working-directory: 'client'
-        run: "npm run lint || true\nnpm test -- --watchAll=false\n"
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm install
+
+      - name: Run lint and tests
+        working-directory: client
+        run: |
+          npm run lint || true
+          npm test -- --watchAll=false
+
   docker-build:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: 'actions/checkout@v3'
-      - name: 'Docker Compose Build Check'
-        run: 'docker-compose -f docker-compose.yml build'
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Docker Compose Build Check
+        run: docker-compose -f docker-compose.yml build
