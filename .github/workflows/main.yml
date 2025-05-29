@@ -19,8 +19,8 @@ jobs:
           POSTGRES_DB: TaskManagerDB
           POSTGRES_USER: root
           POSTGRES_PASSWORD: root
-        ports:
-          - 5432:5432
+        # ports:
+        #   - 5432:5432
         options: >            # Options pour vérifier que le conteneur PostgreSQL est prêt
           --health-cmd pg_isready
           --health-interval 10s
